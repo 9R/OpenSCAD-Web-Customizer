@@ -99,7 +99,6 @@ function paramSetDefaults() {
     }
 }
 
-paramSetDefaults();
 
 (async () => {
     if ('serviceWorker' in navigator) {
@@ -112,7 +111,6 @@ paramSetDefaults();
         }
     }
 })();
-
 
 function getFormProp(prop) {
     console.log(prop);
@@ -532,7 +530,59 @@ function pollCameraChanges() {
     }, 1000); // TODO only if active tab
 }
 
+function createInputNodes() {
+  const container = document.getElementById("param-container"); // Assuming there's a container div in index.html
+
+  Object.keys(model_default_params).forEach(param => {
+    const value = model_default_params[param];
+    const description = model_param_descriptions[param];
+
+    // Create a div to hold the input node
+    const div = document.createElement("div");
+    div.classList.add("cell", "param-item-moi");
+
+    // Create the label element
+    const label = document.createElement("label");
+    label.setAttribute("for", param);
+    
+    const tooltip = document.createElement("span");
+    tooltip.setAttribute("aria-label", description);
+    tooltip.classList.add("cooltipz--down", "cooltipz--large");
+    tooltip.textContent = "ⓘ";
+    
+    label.appendChild(tooltip);
+    label.appendChild(document.createTextNode(`${param}: `));
+
+    // Create the input element based on the type of value
+    let input;
+    if (typeof value === "boolean") {
+      // Boolean: create checkbox input
+      input = document.createElement("input");
+      input.id = param;
+      input.classList.add("checkmark", "form-control");
+      input.type = "checkbox";
+      input.checked = value; // Set the checkbox based on the boolean value
+    } else if (typeof value === "number") {
+      // Float/Number: create number input
+      input = document.createElement("input");
+      input.id = param;
+      input.type = "number";
+      input.classList.add("form-control");
+      input.value = value; // Set the value of the input to the number
+    }
+
+    // Append label and input to the div
+    div.appendChild(label);
+    div.appendChild(input);
+
+    // Append the div to the container
+    container.appendChild(div);
+  });
+}
+
+
 try {
+    createInputNodes();
     stlViewer = buildStlViewer();
     stlViewerElement.ondblclick = () => {
         setAutoRotate(!autorotateCheckbox.checked);
