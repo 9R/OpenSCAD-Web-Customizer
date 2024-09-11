@@ -125,6 +125,14 @@
      overflow: visible;
  }
 
+ .form-group label {
+     display: flex;
+ }
+
+ .form-control {
+	 text-align: center;
+ }
+
  .stl-viewer {
      height: 100vh;
  }

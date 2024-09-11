@@ -31,7 +31,7 @@ const autorotateCheckbox = document.getElementById('autorotate');
 const autorotateButton = document.getElementById('autorotate')
 
 // Paramater creation
-const model_path = 'gridfinity_bins/gridfinity_basic_cup.scad';  // folder name (actually zip file) and source file name
+const model_path = 'model/model.scad';  // folder name (actually zip file) and source file name
 
 const outstl_name = 'storage.stl';
 
