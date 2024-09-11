@@ -3,6 +3,8 @@
 This is mostly based on previous work by various people (see links below)<br>
 it is an abominable mix of code, but it hopefully works <br>
 
+The Source of the OpenSCAD 3D-model is managed in a separate [repo](https://github.com/9R/Customizable-OpenSCAD-Storage-Box).
+
 ## Future improvements:
 - Parse Input values from openscad file
 - Refactor code so it isn't a nightmare
