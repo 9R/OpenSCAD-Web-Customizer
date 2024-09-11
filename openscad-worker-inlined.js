@@ -1,7 +1,7 @@
 // AUTO GENERATED FILE - DO NOT EDIT
 // I'm editing this file (against above advice) to get it to work.
 // Don't yet know enough to implement the proper solution
-var import_meta_url = 'https://vector76.github.io/Web_OpenSCAD_Customizer/';
+var import_meta_url = 'https://9R.github.io/StorageBox-Generator/';
 
 
 var OpenSCAD = (() => {
