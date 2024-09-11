@@ -33,54 +33,54 @@ const autorotateButton = document.getElementById('autorotate')
 // Paramater creation
 const model_path = 'gridfinity_bins/gridfinity_basic_cup.scad';  // folder name (actually zip file) and source file name
 
-const outstl_name = 'grifinity_gen.stl';
+const outstl_name = 'storage.stl';
 
 const model_default_params = {
-    width: 1,
-    depth: 1,
-    height: 6,
-    magnet_diameter: 0,
-    screw_depth: 0,
-    hole_overhang_remedy: true,
-    chambers: 1,
-    withLabel: "No Label",
-    fingerslide: true,
-    labelWidth: 0,
-    wall_thickness: 0.95,
-    efficient_floor: false,
-    lip_style: "Normal",
+    RIM: true,
+    INTERNAL_LOCK: false,
+    BOX_L_OUTER: 165,
+    BOX_W_OUTER: 120,
+    BOX_H_OUTER:  22,
+    CORNER_RADIUS: 2,
+    RIM_W: 3,
+    WALL_THICKNESS: 1.5,
+    DIVIDER_THICKNESS: 1,
+    FLOOR_THICKNESS: 1,
+    DIVISIONS_L:1,
+    DIVISIONS_W:3,
 };
 
 // Not an elegant approach but it should work
 // Will probably regret later if I work on it
 // Seems to be a theme now
 const model_param_mapping = {
-    Normal: "normal",
-    Reduced: "reduced",
-    None: "none",
-    "No Label": "disabled",
-    Left: "left",
-    Right: "right",
-    Center: "center",
-    "Left Chamber": "leftchamber",
-    "Right Chamber": "rightchamber",
-    "Center Chamber": "centerchamber",
+    RIM: "RIM",
+    INTERNAL_LOCK: "INTERNAL_LOCK",
+    BOX_L_OUTER: "BOX_L_OUTER",
+    BOX_W_OUTER: "BOX_W_OUTER",
+    BOX_H_OUTER: "BOX_H_OUTER",
+    CORNER_RADIUS: "CORNER_RADIUS",
+    RIM_W: "RIM_W",
+    WALL_THICKNESS: "WALL_THICKNESS",
+    DIVIDER_THICKNESS: "DIVIDER_THICKNESS",
+    FLOOR_THICKNESS: "FLOOR_THICKNESS",
+    DIVISIONS_L: "DIVISIONS_L",
+    DIVISIONS_W: "DIVISIONS_W",
 };
 
-const model_param_desriptions = {
-    width: "Number of grid units left-to-right (x axis)",
-    depth: "Number of grid units front-to-back (y axis)",
-    height: "Height of bin in standard units (multiples of 7 mm)",
-    magnet_diameter: "Include hole for magnet (Zack's design is 6.5 mm) or 0 to omit magnet hole",
-    screw_depth: "Include deeper narrow hole for screw (Zack's design is 6 mm) or 0 to omit screw hole",
-    hole_overhang_remedy: "If both screw and magnet are defined, include feature for better printing of magnet/screw overhang",
-    chambers: "Number of subdivisions along x axis (uniform divisions)",
-    withLabel: "Include overhang for label and control position, can be 'disabled', 'left', 'right', 'center', 'leftchanber', 'rightchamber', or 'centerchamber'",
-    fingerslide: "Include large corner fillet on the front",
-    labelWidth: "Width of label in number of units, or zero to indicate full width",
-    wall_thickness: "Thickness of outer walls (Zack's design is 0.95)",
-    efficient_floor: "Efficient floor option saves material and time, but the floor is not smooth (only applies if no magnets, screws, or finger-slide used)",
-    lip_style: "Style of lip at top of walls, can be 'normal', 'reduced', or 'none'",
+const model_param_descriptions = {
+	  RIM: "Add Rim at upper Edge",
+    INTERNAL_LOCK: "Internal or extrenal locking mechanism",
+    BOX_L_OUTER: "Length in mm",
+    BOX_W_OUTER: "Width in mm",
+    BOX_H_OUTER:  "Height in mm",
+    CORNER_RADIUS: "Corner Radius in mm",
+    RIM_W: "Top Rim in mm",
+    WALL_THICKNESS: "Outer Wall Thickness",
+    DIVIDER_THICKNESS: "Inner Wall Thickness",
+    FLOOR_THICKNESS: "Floor Thickness",
+    DIVISIONS_L: "Number of Divisions on the Long Edge",
+    DIVISIONS_W: "Number of Divisions on the Short Edge",
   };
 
 function paramSetDefaults() {
