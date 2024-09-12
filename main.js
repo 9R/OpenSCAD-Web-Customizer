@@ -30,22 +30,10 @@ const queryParams = new URLSearchParams(location.search);
 const autorotateCheckbox = document.getElementById('autorotate');
 const autorotateButton = document.getElementById('autorotate')
 
-const model_default_params = {
-    RIM: true,
-    INTERNAL_LOCK: false,
-    BOX_L_OUTER: 165,
-    BOX_W_OUTER: 120,
-    BOX_H_OUTER:  22,
-    CORNER_RADIUS: 2,
-    RIM_W: 3,
-    WALL_THICKNESS: 1.5,
-    DIVIDER_THICKNESS: 1,
-    FLOOR_THICKNESS: 1,
-    DIVISIONS_L:1,
-    DIVISIONS_W:3,
-};
 import {config} from './config.js';
 
+const {model_parameter_defaults, model_parameter_descriptions} = await processOpenSCADFromZip(config.zip_archive);
+	  
 // Not an elegant approach but it should work
 // Will probably regret later if I work on it
 // Seems to be a theme now
@@ -62,26 +50,12 @@ const model_parameter_mappings = {
     "Center Chamber": "centerchamber",
 };
 
-const model_param_descriptions = {
-	  RIM: "Add Rim at upper Edge",
-    INTERNAL_LOCK: "Internal or extrenal locking mechanism",
-    BOX_L_OUTER: "Length in mm",
-    BOX_W_OUTER: "Width in mm",
-    BOX_H_OUTER:  "Height in mm",
-    CORNER_RADIUS: "Corner Radius in mm",
-    RIM_W: "Top Rim in mm",
-    WALL_THICKNESS: "Outer Wall Thickness",
-    DIVIDER_THICKNESS: "Inner Wall Thickness",
-    FLOOR_THICKNESS: "Floor Thickness",
-    DIVISIONS_L: "Number of Divisions on the Long Edge",
-    DIVISIONS_W: "Number of Divisions on the Short Edge",
-  };
 const model_path = config.zip_archive.replace(".zip","/") + config.model_filename;
 
 function paramSetDefaults() {
-    for (var param in model_default_params) {
-        const defaultValue = model_default_params[param];
-        const propType = typeof model_default_params[param];
+    for (var param in model_parameter_defaults) {
+        const defaultValue = model_parameter_defaults[param];
+        const propType = typeof model_parameter_defaults[param];
 
         var propElt = document.getElementById(param);
         if (propType == "boolean") {
@@ -108,8 +82,7 @@ function paramSetDefaults() {
 })();
 
 function getFormProp(prop) {
-    console.log(prop);
-    const propType = typeof model_default_params[prop];
+    const propType = typeof model_parameter_defaults[prop];
     const propElt = document.getElementById(prop);
     if (propType == "boolean") {
         return propElt.checked;
@@ -118,7 +91,7 @@ function getFormProp(prop) {
         return Number(propElt.value);
     }
     else {
-        const mappedString = model_param_mapping[propElt.value];
+        const mappedString = model_parameter_mappings[propElt.value];
         return String(mappedString);  // force to string after mapping
     }
 }
@@ -378,8 +351,8 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
     ];
 
     // add model parameters
-    for (var prop in model_default_params) {
-        if (typeof model_default_params[prop] == "string") {
+    for (var prop in model_parameter_defaults) {
+        if (typeof model_parameter_defaults[prop] == "string") {
             arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
         }
         else {
@@ -525,13 +498,88 @@ function pollCameraChanges() {
     }, 1000); // TODO only if active tab
 }
 
-function createInputNodes() {
+async function fetchModelZip(url) {
+	    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.arrayBuffer();  // Returns the binary data for further processing
+}
+
+async function extractOpenSCADFile(arrayBuffer) {
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    // Assuming there's only one OpenSCAD file or its name is known
+    const scadFile = zip.file("model.scad")
+    if (!scadFile) {
+        throw new Error("OpenSCAD file not found in the ZIP archive.");
+    }
+    return scadFile.async("string") ; // Extract file as a string
+}
+		
+
+function parseOpenSCADConfVariables(content) {
+	  const model_parameters_raw = content.split("[Hidden]")[0];
+	  console.log(model_parameters_raw);
+
+	  // Split the input text into lines
+    const lines = model_parameters_raw.split("\n");
+    
+    // Initialize the two objects to hold the parameters
+    const model_parameter_defaults = {};
+    const model_parameter_descriptions = {};
+
+    // Use a regex to match the parameter and value lines
+    const paramRegex = /(\w+)\s*=\s*([0-9.]+)\s*;/;  // Matches: PARAM_NAME = value;
+
+    // Iterate through the lines to extract parameters and their descriptions
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        // Check if the line is a comment (description)
+        if (line.startsWith("//")) {
+            const description = line.replace("//", "").trim();  // Remove '//' and trim spaces
+
+            // Look ahead to see if the next line contains a parameter definition
+            const nextLine = lines[i + 1] ? lines[i + 1].trim() : "";
+            const match = nextLine.match(paramRegex);
+
+            if (match) {
+                const paramName = match[1];  // Extract parameter name
+                const paramValue = parseFloat(match[2]);  // Extract and convert the value to a number
+
+                // Add the parameter and its value to the _defaults object
+                model_parameter_defaults[paramName] = paramValue;
+
+                // Add the parameter and its description to the description object
+                model_parameter_descriptions[paramName] = description;
+
+                // Skip the next line since we already processed it
+                i++;
+            }
+        }
+    }
+    return { model_parameter_defaults, model_parameter_descriptions };
+}
+
+async function processOpenSCADFromZip(url) {
+    try {
+        const arrayBuffer = await fetchModelZip(url);
+        const openSCADContent = await extractOpenSCADFile(arrayBuffer);
+        const parameters = parseOpenSCADConfVariables(openSCADContent);
+			  return parameters;
+    } catch (error) {
+        console.error("Error processing OpenSCAD file:", error);
+    }
+}
+
+async function createInputNodes() {
   const container = document.getElementById("param-container"); // Assuming there's a container div in index.html
 
-  Object.keys(model_default_params).forEach(param => {
-    const value = model_default_params[param];
-    const description = model_param_descriptions[param];
   const {model_parameter_defaults, model_parameter_descriptions} = await processOpenSCADFromZip(config.zip_archive);
+
+  Object.keys(model_parameter_defaults).forEach(param => {
+    const value = model_parameter_defaults[param];
+    const description = model_parameter_descriptions[param];
 
     // Create a div to hold the input node
     const div = document.createElement("div");
