@@ -30,11 +30,6 @@ const queryParams = new URLSearchParams(location.search);
 const autorotateCheckbox = document.getElementById('autorotate');
 const autorotateButton = document.getElementById('autorotate')
 
-// Paramater creation
-const model_path = 'model/model.scad';  // folder name (actually zip file) and source file name
-
-const outstl_name = 'storage.stl';
-
 const model_default_params = {
     RIM: true,
     INTERNAL_LOCK: false,
@@ -49,6 +44,7 @@ const model_default_params = {
     DIVISIONS_L:1,
     DIVISIONS_W:3,
 };
+import {config} from './config.js';
 
 // Not an elegant approach but it should work
 // Will probably regret later if I work on it
@@ -80,6 +76,7 @@ const model_param_descriptions = {
     DIVISIONS_L: "Number of Divisions on the Long Edge",
     DIVISIONS_W: "Number of Divisions on the Short Edge",
   };
+const model_path = config.zip_archive.replace(".zip","/") + config.model_filename;
 
 function paramSetDefaults() {
     for (var param in model_default_params) {
@@ -376,7 +373,7 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
 
     var arglist = [
         "input.scad",
-        "-o", outstl_name,
+        "-o", config.output_filename,
         ...Object.keys(featureCheckboxes).filter(f => featureCheckboxes[f].checked).map(f => `--enable=${f}`),
     ];
 
@@ -396,7 +393,7 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
     const job = spawnOpenSCAD({
         inputs: [['input.scad', source]],
         args: arglist,
-        outputPaths: [outstl_name],
+        outputPaths: [config.output_filename],
         zipArchives: [model_dir],  // just a list of zip files (no longer an object)
     });
 
@@ -534,6 +531,7 @@ function createInputNodes() {
   Object.keys(model_default_params).forEach(param => {
     const value = model_default_params[param];
     const description = model_param_descriptions[param];
+  const {model_parameter_defaults, model_parameter_descriptions} = await processOpenSCADFromZip(config.zip_archive);
 
     // Create a div to hold the input node
     const div = document.createElement("div");
