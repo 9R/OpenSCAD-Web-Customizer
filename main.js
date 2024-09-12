@@ -53,19 +53,17 @@ const model_default_params = {
 // Not an elegant approach but it should work
 // Will probably regret later if I work on it
 // Seems to be a theme now
-const model_param_mapping = {
-    RIM: "RIM",
-    INTERNAL_LOCK: "INTERNAL_LOCK",
-    BOX_L_OUTER: "BOX_L_OUTER",
-    BOX_W_OUTER: "BOX_W_OUTER",
-    BOX_H_OUTER: "BOX_H_OUTER",
-    CORNER_RADIUS: "CORNER_RADIUS",
-    RIM_W: "RIM_W",
-    WALL_THICKNESS: "WALL_THICKNESS",
-    DIVIDER_THICKNESS: "DIVIDER_THICKNESS",
-    FLOOR_THICKNESS: "FLOOR_THICKNESS",
-    DIVISIONS_L: "DIVISIONS_L",
-    DIVISIONS_W: "DIVISIONS_W",
+const model_parameter_mappings = {
+    Normal: "normal",
+    Reduced: "reduced",
+    None: "none",
+    "No Label": "disabled",
+    Left: "left",
+    Right: "right",
+    Center: "center",
+    "Left Chamber": "leftchamber",
+    "Right Chamber": "rightchamber",
+    "Center Chamber": "centerchamber",
 };
 
 const model_param_descriptions = {
