@@ -26,14 +26,11 @@ served from also needs to be set.
 
 All credit goes to their respective owners, all mistakes and fuckups are mine.
 
-[gridfinity Generator with hack style sheet]
-(https://github.com/vector76/gridfinity-openscad)
+[gridfinity Generator](https://github.com/vector76/gridfinity-openscad)
 
-[Gridfinity-Generator]
-(https://github.com/Hamza-Anver/Gridfinity-Generator)
+[Gridfinity-Generator with hack style sheet](https://github.com/Hamza-Anver/Gridfinity-Generator)
 
-[CSS theme template for this site]
-(https://sukima.github.io/hackcss-ext/">hack.css)
+[CSS theme template for this site](https://sukima.github.io/hackcss-ext/">hack.css)
 
 [For OpenSCAD Web Assembly](https://github.com/ochafik/openscad-wasm)
 
