@@ -2,7 +2,7 @@
 // I'm editing this file (against above advice) to get it to work.
 // Don't yet know enough to implement the proper solution
 
-var import_meta_url = 'http://localhost:2000/';
+var import_meta_url = 'https://9R.github.io/StorageBox-Generator/';
 
 var OpenSCAD = (() => {
   var _scriptDir = import_meta_url;
