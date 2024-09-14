@@ -55,11 +55,12 @@ const model_path = config.zip_archive.replace(".zip","/") + config.model_filenam
 function paramSetDefaults() {
 	for (var param in model_parameter_defaults) {
 		const defaultValue = model_parameter_defaults[param];
-		const propType = typeof model_parameter_defaults[param];
-
+  
 		var propElt = document.getElementById(param);
-		if (propType == "boolean") {
+		if (propElt.type == "boolean") {
 			propElt.checked = defaultValue;
+		} else if (propElt.type == "select-one") {
+			propElt.value = defaultValue[0];
 		} else {
 			propElt.value = defaultValue;
 		}
