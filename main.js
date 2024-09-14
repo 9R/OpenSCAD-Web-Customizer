@@ -32,7 +32,7 @@ const autorotateButton = document.getElementById('autorotate')
 
 import {config} from './config.js';
 
-const {model_parameter_defaults, model_parameter_descriptions} = await processOpenSCADFromZip(config.zip_archive);
+const {model_parameter_defaults, model_parameter_descriptions, model_parameter_ranges} = await processOpenSCADFromZip(config.zip_archive);
 
 // Not an elegant approach but it should work
 // Will probably regret later if I work on it
@@ -529,6 +529,7 @@ function parseOpenSCADConfVariables(content) {
 	// Initialize the two objects to hold the parameters
 	const model_parameter_defaults = {};
 	const model_parameter_descriptions = {};
+	const model_parameter_ranges = {};
 
 	// Use a regex to match the parameter and value lines
 	const booleanPattern = /^(\w+)\s*=\s*(true|false);/;
@@ -579,12 +580,15 @@ function parseOpenSCADConfVariables(content) {
 			// Add the parameter and its description to the description object
 			model_parameter_descriptions[paramName] = description;
 
+			// Add the parameter and its description to the description object
+			model_parameter_ranges[paramName] = paramRange;
+
   		// Skip the next line since we already processed it
 			i++;
 		}
 	}
   //console.log( model_parameter_defaults);
-	return { model_parameter_defaults, model_parameter_descriptions };
+	return { model_parameter_defaults, model_parameter_descriptions, model_parameter_ranges };
 }
 
 async function processOpenSCADFromZip(url) {
@@ -601,11 +605,10 @@ async function processOpenSCADFromZip(url) {
 async function createInputNodes() {
 	const container = document.getElementById("param-container"); // Assuming there's a container div in index.html
 
-	//const {model_parameter_defaults, model_parameter_descriptions} = await processOpenSCADFromZip(config.zip_archive);
-
 	Object.keys(model_parameter_defaults).forEach(param => {
 		const value = model_parameter_defaults[param];
 		const description = model_parameter_descriptions[param];
+		const range = model_parameter_ranges[param];
 
 		// Create a div to hold the input node
 		const div = document.createElement("div");
@@ -637,9 +640,12 @@ async function createInputNodes() {
 			input = document.createElement("input");
 			input.id = param;
 			input.type = "number";
+			input.min = range[0];
+			input.step = range[1];
+			input.max = range[2];
 			input.classList.add("form-control");
 			input.value = value; // Set the value of the input to the number
-			// Float/Number: create list input
+			// Array: create list input
 		} else if (Array.isArray(value)) {
 			input = document.createElement("select");
 			input.id = param;
