@@ -436,122 +436,63 @@ function getState() {
 function normalizeSource(src) {
 	return src.replaceAll(/\/\*.*?\*\/|\/\/.*?$/gm, '')
 		.replaceAll(/([,.({])\s+/gm, '$1')
-			.replaceAll(/\s+([,.({])/gm, '$1')
-				.replaceAll(/\s+/gm, ' ')
-				.trim()
-			}
-				function normalizeStateForCompilation(state) {
-					return {
-						...state,
-						source: {
-							...state.source,
-							content: normalizeSource(state.source.content)
-						},
-					}
-				}
-
-				const defaultState = {
-					source: {
-						name: 'input.stl',
-						content: 'include <' + model_path + '>',
-					},
-					maximumMegabytes: 1024,
-					viewerFocused: false,
-					features: ['fast-csg', 'fast-csg-trust-corefinement', 'fast-csg-remesh', 'fast-csg-exact-callbacks', 'lazy-union'],
-				};
-
-				function setState(state) {
-					sourceFileName = state.source.name || 'input.scad';
-					if (state.camera && persistCameraState) {
-						stlViewer.set_camera_state(state.camera);
-					}
-					let features = new Set();
-					if (state.features) {
-						features = new Set(state.features);
-						Object.keys(featureCheckboxes).forEach(f => featureCheckboxes[f].checked = features.has(f));
-					}
-					setAutoRotate(state.autorotate ?? true)
-				}
-
-				var previousNormalizedState;
-				function onStateChanged({ allowRun }) {
-					const newState = getState();
-
-					featuresContainer.style.display = 'none';
-
-					const normalizedState = normalizeStateForCompilation(newState);
-					if (JSON.stringify(previousNormalizedState) != JSON.stringify(normalizedState)) {
-						previousNormalizedState = normalizedState;
-
-						if (allowRun) {
-							render({ now: false });
-						}
-					}
-				}
-
-				function pollCameraChanges() {
-					if (!persistCameraState) {
-						return;
-					}
-					let lastCam;
-					setInterval(function () {
-						const ser = JSON.stringify(stlViewer.get_camera_state());
-						if (ser != lastCam) {
-							lastCam = ser;
-							onStateChanged({ allowRun: false });
-						}
-					}, 1000); // TODO only if active tab
-				}
-
-				async function fetchModelZip(url) {
-					const response = await fetch(url);
-					if (!response.ok) {
-						throw new Error(`HTTP error! Status: ${response.status}`);
-					}
-					return response.arrayBuffer();  // Returns the binary data for further processing
-				}
-
-				async function extractOpenSCADFile(arrayBuffer) {
-					const zip = await JSZip.loadAsync(arrayBuffer);
-					// Assuming there's only one OpenSCAD file or its name is known
-					const scadFile = zip.file("model.scad")
-					if (!scadFile) {
-						throw new Error("OpenSCAD file not found in the ZIP archive.");
-					}
-					return scadFile.async("string") ; // Extract file as a string
-				}
-
-				function parseOpenSCADConfVariables(content) {
-					const model_parameters_raw = content.split("[Hidden]")[0];
-
-					// Split the input text into lines
-					const lines = model_parameters_raw.split("\n");
-
-					// Initialize the two objects to hold the parameters
-					const model_parameter_defaults = {};
-					const model_parameter_descriptions = {};
-
-					// Use a regex to match the parameter and value lines
 					const paramRegex = /(\w+)\s*=\s*(true|false|[0-9.]+)\s*;/;  // Matches: PARAM_NAME = value;
+		.replaceAll(/\s+([,.({])/gm, '$1')
+		.replaceAll(/\s+/gm, ' ')
+		.trim()
+}
 
-					// Iterate through the lines to extract parameters and their descriptions
-					for (let i = 0; i < lines.length; i++) {
-						const line = lines[i].trim();
+function normalizeStateForCompilation(state) {
+	return {
+		...state,
+		source: {
+			...state.source,
+			content: normalizeSource(state.source.content)
+		},
+	}
+}
 
-						// Check if the line is a comment (description)
-						if (line.startsWith("//")) {
-							const description = line.replace("//", "").trim();  // Remove '//' and trim spaces
+const defaultState = {
+	source: {
+		name: 'input.stl',
+		content: 'include <' + model_path + '>',
+	},
+	maximumMegabytes: 1024,
+	viewerFocused: false,
+	features: ['fast-csg', 'fast-csg-trust-corefinement', 'fast-csg-remesh', 'fast-csg-exact-callbacks', 'lazy-union'],
+};
 
-							// Look ahead to see if the next line contains a parameter definition
-							const nextLine = lines[i + 1] ? lines[i + 1].trim() : "";
-							const match = nextLine.match(paramRegex);
+function setState(state) {
+	sourceFileName = state.source.name || 'input.scad';
+	if (state.camera && persistCameraState) {
+		stlViewer.set_camera_state(state.camera);
+	}
+	let features = new Set();
+	if (state.features) {
+		features = new Set(state.features);
+		Object.keys(featureCheckboxes).forEach(f => featureCheckboxes[f].checked = features.has(f));
+	}
+	setAutoRotate(state.autorotate ?? true)
+}
 
 							if (match) {
 								const paramName = match[1];  // Extract parameter name
+var previousNormalizedState;
+function onStateChanged({ allowRun }) {
+	const newState = getState();
 
 								const raw_value = match[2];
+	featuresContainer.style.display = 'none';
 
-								let paramValue ;
+	const normalizedState = normalizeStateForCompilation(newState);
+	if (JSON.stringify(previousNormalizedState) != JSON.stringify(normalizedState)) {
+		previousNormalizedState = normalizedState;
+
+		if (allowRun) {
+			render({ now: false });
+		}
+	}
+}
 
 								if (raw_value === 'true') {
 									paramValue = true;
@@ -564,119 +505,174 @@ function normalizeSource(src) {
 								if (isNaN(paramValue)) {
 									throw new Error(`Invalid parameter value: ${rawValue}`);
 								}
+function pollCameraChanges() {
+	if (!persistCameraState) {
+		return;
+	}
+	let lastCam;
+	setInterval(function () {
+		const ser = JSON.stringify(stlViewer.get_camera_state());
+		if (ser != lastCam) {
+			lastCam = ser;
+			onStateChanged({ allowRun: false });
+		}
+	}, 1000); // TODO only if active tab
+}
 
-								// Add the parameter and its value to the _defaults object
-								model_parameter_defaults[paramName] = paramValue;
+async function fetchModelZip(url) {
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`HTTP error! Status: ${response.status}`);
+	}
+	return response.arrayBuffer();  // Returns the binary data for further processing
+}
 
-								// Add the parameter and its description to the description object
-								model_parameter_descriptions[paramName] = description;
+async function extractOpenSCADFile(arrayBuffer) {
+	const zip = await JSZip.loadAsync(arrayBuffer);
+	// Assuming there's only one OpenSCAD file or its name is known
+	const scadFile = zip.file("model.scad")
+	if (!scadFile) {
+		throw new Error("OpenSCAD file not found in the ZIP archive.");
+	}
+	return scadFile.async("string") ; // Extract file as a string
+}
 
-								// Skip the next line since we already processed it
-								i++;
-							}
-						}
-					}
-					return { model_parameter_defaults, model_parameter_descriptions };
+function parseOpenSCADConfVariables(content) {
+	const model_parameters_raw = content.split("[Hidden]")[0];
+
+	// Split the input text into lines
+	const lines = model_parameters_raw.split("\n");
+
+	// Initialize the two objects to hold the parameters
+	const model_parameter_defaults = {};
+	const model_parameter_descriptions = {};
+
+	// Use a regex to match the parameter and value lines
+
+	// Iterate through the lines to extract parameters and their descriptions
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i].trim();
+
+		// Check if the line is a comment (description)
+		if (line.startsWith("//")) {
+			const description = line.replace("//", "").trim();  // Remove '//' and trim spaces
+      var {match_bool, match_num, match} = {};
+			// Look ahead to see if the next line contains a parameter definition
+			const nextLine = lines[i + 1] ? lines[i + 1].trim() : "";
+      
+      let paramValue;
 				}
+			// Add the parameter and its value to the _defaults object
+			model_parameter_defaults[paramName] = paramValue;
 
-				async function processOpenSCADFromZip(url) {
-					try {
-						const arrayBuffer = await fetchModelZip(url);
-						const openSCADContent = await extractOpenSCADFile(arrayBuffer);
-						const parameters = parseOpenSCADConfVariables(openSCADContent);
-						return parameters;
-					} catch (error) {
-						console.error("Error processing OpenSCAD file:", error);
-					}
-				}
+			// Add the parameter and its description to the description object
+			model_parameter_descriptions[paramName] = description;
 
-				async function createInputNodes() {
-					const container = document.getElementById("param-container"); // Assuming there's a container div in index.html
+  		// Skip the next line since we already processed it
+			i++;
+		}
+	}
+	return { model_parameter_defaults, model_parameter_descriptions };
+}
 
-					const {model_parameter_defaults, model_parameter_descriptions} = await processOpenSCADFromZip(config.zip_archive);
+async function processOpenSCADFromZip(url) {
+	try {
+		const arrayBuffer = await fetchModelZip(url);
+		const openSCADContent = await extractOpenSCADFile(arrayBuffer);
+		const parameters = parseOpenSCADConfVariables(openSCADContent);
+		return parameters;
+	} catch (error) {
+		console.error("Error processing OpenSCAD file:", error);
+	}
+}
 
-					Object.keys(model_parameter_defaults).forEach(param => {
-						const value = model_parameter_defaults[param];
-						const description = model_parameter_descriptions[param];
+async function createInputNodes() {
+	const container = document.getElementById("param-container"); // Assuming there's a container div in index.html
 
-						// Create a div to hold the input node
-						const div = document.createElement("div");
-						div.classList.add("cell", "param-item-moi");
+	//const {model_parameter_defaults, model_parameter_descriptions} = await processOpenSCADFromZip(config.zip_archive);
 
-						// Create the label element
-						const label = document.createElement("label");
-						label.setAttribute("for", param);
+	Object.keys(model_parameter_defaults).forEach(param => {
+		const value = model_parameter_defaults[param];
+		const description = model_parameter_descriptions[param];
 
-						const tooltip = document.createElement("span");
-						tooltip.setAttribute("aria-label", description);
-						tooltip.classList.add("cooltipz--down", "cooltipz--large");
-						tooltip.textContent = "ⓘ";
+		// Create a div to hold the input node
+		const div = document.createElement("div");
+		div.classList.add("cell", "param-item-moi");
 
-						label.appendChild(tooltip);
-						label.appendChild(document.createTextNode(`${param}: `));
+		// Create the label element
+		const label = document.createElement("label");
+		label.setAttribute("for", param);
 
-						// Create the input element based on the type of value
-						let input;
-						if (typeof value === "boolean") {
-							// Boolean: create checkbox input
-							input = document.createElement("input");
-							input.id = param;
-							input.classList.add("checkmark", "form-control");
-							input.type = "checkbox";
-							input.checked = value; // Set the checkbox based on the boolean value
-						} else if (typeof value === "number") {
-							// Float/Number: create number input
-							input = document.createElement("input");
-							input.id = param;
-							input.type = "number";
-							input.classList.add("form-control");
-							input.value = value; // Set the value of the input to the number
-						}
+		const tooltip = document.createElement("span");
+		tooltip.setAttribute("aria-label", description);
+		tooltip.classList.add("cooltipz--down", "cooltipz--large");
+		tooltip.textContent = "ⓘ";
 
-						// Append label and input to the div
-						div.appendChild(label);
-						div.appendChild(input);
+		label.appendChild(tooltip);
+		label.appendChild(document.createTextNode(`${param}: `));
 
-						// Append the div to the container
-						container.appendChild(div);
-					});
-				}
+		// Create the input element based on the type of value
+		let input;
+		if (typeof value === "boolean") {
+			// Boolean: create checkbox input
+			input = document.createElement("input");
+			input.id = param;
+			input.classList.add("checkmark", "form-control");
+			input.type = "checkbox";
+			input.checked = value; // Set the checkbox based on the boolean value
+			// Float/Number: create number input
+		} else if (typeof value === "number") {
+			input = document.createElement("input");
+			input.id = param;
+			input.type = "number";
+			input.classList.add("form-control");
+			input.value = value; // Set the value of the input to the number
+			// Float/Number: create list input
+		}
 
+		// Append label and input to the div
+		div.appendChild(label);
+		div.appendChild(input);
 
-				try {
-					createInputNodes();
-					stlViewer = buildStlViewer();
-					stlViewerElement.ondblclick = () => {
-						setAutoRotate(!autorotateCheckbox.checked);
-						onStateChanged({ allowRun: false });
-					};
+		// Append the div to the container
+		container.appendChild(div);
+	});
+}
 
-					stlViewerElement.onclick = () => {
-						if(settingsVis){ SettingsMenuToggle();};
-						if(renderinfoVis){ renderInfoToggle();};
-					}
+try {
+	createInputNodes();
+	stlViewer = buildStlViewer();
+	stlViewerElement.ondblclick = () => {
+		setAutoRotate(!autorotateCheckbox.checked);
+		onStateChanged({ allowRun: false });
+	};
 
-					const initialState = defaultState;
+	stlViewerElement.onclick = () => {
+		if(settingsVis){ SettingsMenuToggle();};
+		if(renderinfoVis){ renderInfoToggle();};
+	}
 
-					setState(initialState);
-					await buildFeatureCheckboxes(featuresContainer, featureCheckboxes, () => {
-						onStateChanged({ allowRun: true });
-					});
-					setState(initialState);
+	const initialState = defaultState;
 
-					autorotateCheckbox.onchange = () => {
-						stlViewer.set_auto_rotate(autorotateCheckbox.checked);
-						onStateChanged({ allowRun: false });
-					};
+	setState(initialState);
+	await buildFeatureCheckboxes(featuresContainer, featureCheckboxes, () => {
+		onStateChanged({ allowRun: true });
+	});
+	setState(initialState);
 
-
-					resetDefaults.onclick = () => {
-						paramSetDefaults();
-					}
-					pollCameraChanges();
-					onStateChanged({ allowRun: true });
+	autorotateCheckbox.onchange = () => {
+		stlViewer.set_auto_rotate(autorotateCheckbox.checked);
+		onStateChanged({ allowRun: false });
+	};
 
 
-				} catch (e) {
-					console.error(e);
-				}
+	resetDefaults.onclick = () => {
+		paramSetDefaults();
+	}
+	pollCameraChanges();
+	onStateChanged({ allowRun: true });
+
+
+} catch (e) {
+	console.error(e);
+}
