@@ -436,7 +436,6 @@ function getState() {
 function normalizeSource(src) {
 	return src.replaceAll(/\/\*.*?\*\/|\/\/.*?$/gm, '')
 		.replaceAll(/([,.({])\s+/gm, '$1')
-					const paramRegex = /(\w+)\s*=\s*(true|false|[0-9.]+)\s*;/;  // Matches: PARAM_NAME = value;
 		.replaceAll(/\s+([,.({])/gm, '$1')
 		.replaceAll(/\s+/gm, ' ')
 		.trim()
@@ -475,13 +474,10 @@ function setState(state) {
 	setAutoRotate(state.autorotate ?? true)
 }
 
-							if (match) {
-								const paramName = match[1];  // Extract parameter name
 var previousNormalizedState;
 function onStateChanged({ allowRun }) {
 	const newState = getState();
 
-								const raw_value = match[2];
 	featuresContainer.style.display = 'none';
 
 	const normalizedState = normalizeStateForCompilation(newState);
@@ -494,17 +490,6 @@ function onStateChanged({ allowRun }) {
 	}
 }
 
-								if (raw_value === 'true') {
-									paramValue = true;
-								} else if (raw_value === 'false') {
-									paramValue = false;
-								} else {
-									paramValue = parseFloat(match[2]);  // Extract and convert the value to a number
-								}
-
-								if (isNaN(paramValue)) {
-									throw new Error(`Invalid parameter value: ${rawValue}`);
-								}
 function pollCameraChanges() {
 	if (!persistCameraState) {
 		return;
@@ -548,6 +533,10 @@ function parseOpenSCADConfVariables(content) {
 	const model_parameter_descriptions = {};
 
 	// Use a regex to match the parameter and value lines
+	const booleanPattern = /^(\w+)\s*=\s*(true|false);/;
+	const numberPattern = /(\w+)\s*=\s*(\d*(?:\.\d*)?);(?:.*\/\/\s*\[(.+)\])?/;
+	const menuPattern = /(\w+)\s*=\s*"(.*)";.*\/\/\[(.*)\]/;
+
 
 	// Iterate through the lines to extract parameters and their descriptions
 	for (let i = 0; i < lines.length; i++) {
@@ -560,8 +549,32 @@ function parseOpenSCADConfVariables(content) {
 			// Look ahead to see if the next line contains a parameter definition
 			const nextLine = lines[i + 1] ? lines[i + 1].trim() : "";
       
+      let paramName;
       let paramValue;
+      let paramRange;
+
+  		// Check for boole variables
+			if ( match = nextLine.match(booleanPattern)) {
+				paramName = match[1];
+				paramValue = ( (match[2]) === "true"  );
+  		}
+  		// Check for number variables with optional range info
+  		else if (match = nextLine.match(numberPattern)) {
+  			const rangeInfo = match[3] ? match[3].split(':').map(Number) : null; // Parse the range if available
+				paramName = match[1];
+				paramValue = parseFloat(match[2]);
+				if (rangeInfo) {
+  				paramRange = [parseFloat(rangeInfo[0]), parseFloat(rangeInfo[1]), parseFloat(rangeInfo[2])];
 				}
+  		}
+  		// Check for menu select variables
+  		else if (match = nextLine.match(menuPattern)) {
+  			const options = match[3].split(',').map(opt => opt.trim()); // Parse options
+				paramName = match[1];
+				paramValue = options;
+  		}
+			else  { console.log("match failed") ;}
+
 			// Add the parameter and its value to the _defaults object
 			model_parameter_defaults[paramName] = paramValue;
 
@@ -572,6 +585,7 @@ function parseOpenSCADConfVariables(content) {
 			i++;
 		}
 	}
+  //console.log( model_parameter_defaults);
 	return { model_parameter_defaults, model_parameter_descriptions };
 }
 
@@ -628,6 +642,16 @@ async function createInputNodes() {
 			input.classList.add("form-control");
 			input.value = value; // Set the value of the input to the number
 			// Float/Number: create list input
+		} else if (Array.isArray(value)) {
+			input = document.createElement("select");
+			input.id = param;
+			input.classList.add("form-control");
+			value.forEach(function(item) {
+				var option = document.createElement("option");
+				option.value = item;
+				option.textContent = item;
+				input.appendChild(option);
+			});
 		}
 
 		// Append label and input to the div
