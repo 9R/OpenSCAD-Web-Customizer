@@ -81,10 +81,7 @@ function paramSetDefaults() {
 
 function getFormProp(prop) {
 	const propElt = document.getElementById(prop);
-  console.log(propElt.type);
-	console.log(propElt);
 	if (propElt.type == "checkbox") {
-		console.log(propElt);
 		return propElt.checked;
 	}
 	else if (propElt.type === "number") {
@@ -92,8 +89,6 @@ function getFormProp(prop) {
 	}
 	else if (propElt.type === "select-one") {
 		return String(propElt.value);
-		console("asdfasdf");
-		console(propElt.value);
 	}
 	else {
 		const mappedString = model_parameter_mappings[propElt.value];
