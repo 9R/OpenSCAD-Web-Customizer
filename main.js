@@ -79,13 +79,18 @@ function paramSetDefaults() {
 })();
 
 function getFormProp(prop) {
-	const propType = typeof model_parameter_defaults[prop];
 	const propElt = document.getElementById(prop);
-	if (propType == "boolean") {
+  console.log(propElt.type);
+	if (propElt.type == "boolean") {
 		return propElt.checked;
 	}
-	else if (propType === "number") {
+	else if (propElt.type === "number") {
 		return Number(propElt.value);
+	}
+	else if (propElt.type === "select-one") {
+		return String(propElt.value);
+		console("asdfasdf");
+		console(propElt.value);
 	}
 	else {
 		const mappedString = model_parameter_mappings[propElt.value];
@@ -350,6 +355,9 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
 	// add model parameters
 	for (var prop in model_parameter_defaults) {
 		if (typeof model_parameter_defaults[prop] == "string") {
+			arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
+		}
+		if ( Array.isArray(model_parameter_defaults[prop]) ) {
 			arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
 		}
 		else {
