@@ -82,7 +82,9 @@ function paramSetDefaults() {
 function getFormProp(prop) {
 	const propElt = document.getElementById(prop);
   console.log(propElt.type);
-	if (propElt.type == "boolean") {
+	console.log(propElt);
+	if (propElt.type == "checkbox") {
+		console.log(propElt);
 		return propElt.checked;
 	}
 	else if (propElt.type === "number") {
