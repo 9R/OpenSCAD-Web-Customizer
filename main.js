@@ -32,7 +32,7 @@ const autorotateButton = document.getElementById('autorotate')
 
 import {config} from './config.js';
 
-const {model_parameter_defaults, model_parameter_descriptions, model_parameter_ranges} = await processOpenSCADFromZip(config.zip_archive);
+const {model_params_default, model_params_description, model_params_possible} = await processOpenSCADFromZip(config.zip_archive);
 
 // Not an elegant approach but it should work
 // Will probably regret later if I work on it
@@ -53,8 +53,8 @@ const model_parameter_mappings = {
 const model_path = config.zip_archive.replace(".zip","/") + config.model_filename;
 
 function paramSetDefaults() {
-	for (var param in model_parameter_defaults) {
-		const defaultValue = model_parameter_defaults[param];
+	for (var param in model_params_default) {
+		const defaultValue = model_params_default[param];
   
 		var propElt = document.getElementById(param);
 		if (propElt.type == "boolean") {
@@ -351,11 +351,11 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
 	];
 
 	// add model parameters
-	for (var prop in model_parameter_defaults) {
-		if (typeof model_parameter_defaults[prop] == "string") {
+	for (var prop in model_params_default) {
+		if (typeof model_params_default[prop] == "string") {
 			arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
 		}
-		if ( Array.isArray(model_parameter_defaults[prop]) ) {
+		if ( Array.isArray(model_params_possible[prop]) ) {
 			arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
 		}
 		else {
@@ -386,7 +386,7 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
 				}
 
 				metaElement.innerText = ' - Rendered in ' + formatMillis(result.elapsedMillis);
-				pageTitle.innerText= 'Gridfinity Generator'
+				pageTitle.innerText= 'OpenSCAD Web Customizer'
 				const [output] = result.outputs;
 				if (!output) throw 'No output from runner!'
 				const [filePath, content] = output;
@@ -527,9 +527,9 @@ function parseOpenSCADConfVariables(content) {
 	const lines = model_parameters_raw.split("\n");
 
 	// Initialize the two objects to hold the parameters
-	const model_parameter_defaults = {};
-	const model_parameter_descriptions = {};
-	const model_parameter_ranges = {};
+	const model_params_default = {};
+	const model_params_description = {};
+	const model_params_possible = {};
 
 	// Use a regex to match the parameter and value lines
 	const booleanPattern = /^(\w+)\s*=\s*(true|false);/;
@@ -550,9 +550,9 @@ function parseOpenSCADConfVariables(content) {
       
       let paramName;
       let paramValue;
-      let paramRange;
+      let paramPossible;
 
-  		// Check for boole variables
+  		// Check for boolean variables
 			if ( match = nextLine.match(booleanPattern)) {
 				paramName = match[1];
 				paramValue = ( (match[2]) === "true"  );
@@ -563,32 +563,33 @@ function parseOpenSCADConfVariables(content) {
 				paramName = match[1];
 				paramValue = parseFloat(match[2]);
 				if (rangeInfo) {
-  				paramRange = [parseFloat(rangeInfo[0]), parseFloat(rangeInfo[1]), parseFloat(rangeInfo[2])];
+  				paramPossible = [parseFloat(rangeInfo[0]), parseFloat(rangeInfo[1]), parseFloat(rangeInfo[2])];
 				}
   		}
   		// Check for menu select variables
   		else if (match = nextLine.match(menuPattern)) {
-  			const options = match[3].split(',').map(opt => opt.trim()); // Parse options
+  			//const options = match[3].split(',').map(opt => opt.trim()); // Parse options
 				paramName = match[1];
-				paramValue = options;
+				paramValue = match[2];
+  			paramPossible = match[3].split(',').map(opt => opt.trim()); // Parse options
   		}
 			else  { console.log("match failed") ;}
 
 			// Add the parameter and its value to the _defaults object
-			model_parameter_defaults[paramName] = paramValue;
+			model_params_default[paramName] = paramValue;
 
 			// Add the parameter and its description to the description object
-			model_parameter_descriptions[paramName] = description;
+			model_params_description[paramName] = description;
 
 			// Add the parameter and its description to the description object
-			model_parameter_ranges[paramName] = paramRange;
+			model_params_possible[paramName] = paramPossible;
 
   		// Skip the next line since we already processed it
 			i++;
 		}
 	}
-  //console.log( model_parameter_defaults);
-	return { model_parameter_defaults, model_parameter_descriptions, model_parameter_ranges };
+  //console.log( model_params_default);
+	return { model_params_default, model_params_description, model_params_possible };
 }
 
 async function processOpenSCADFromZip(url) {
@@ -605,10 +606,10 @@ async function processOpenSCADFromZip(url) {
 async function createInputNodes() {
 	const container = document.getElementById("param-container"); // Assuming there's a container div in index.html
 
-	Object.keys(model_parameter_defaults).forEach(param => {
-		const value = model_parameter_defaults[param];
-		const description = model_parameter_descriptions[param];
-		const range = model_parameter_ranges[param];
+	Object.keys(model_params_default).forEach(param => {
+		const value = model_params_default[param];
+		const description = model_params_description[param];
+		const possible_value = model_params_possible[param];
 
 		// Create a div to hold the input node
 		const div = document.createElement("div");
@@ -625,7 +626,8 @@ async function createInputNodes() {
 
 		label.appendChild(tooltip);
 		label.appendChild(document.createTextNode(`${param}: `));
-
+    
+		console.log(param);
 		// Create the input element based on the type of value
 		let input;
 		if (typeof value === "boolean") {
@@ -640,24 +642,23 @@ async function createInputNodes() {
 			input = document.createElement("input");
 			input.id = param;
 			input.type = "number";
-			input.min = range[0];
-			input.step = range[1];
-			input.max = range[2];
+			input.min = possible_value[0];
+			input.step = possible_value[1];
+			input.max = possible_value[2];
 			input.classList.add("form-control");
 			input.value = value; // Set the value of the input to the number
 			// Array: create list input
-		} else if (Array.isArray(value)) {
+		} else if (Array.isArray(possible_value)) {
 			input = document.createElement("select");
 			input.id = param;
 			input.classList.add("form-control");
-			value.forEach(function(item) {
+			possible_value.forEach(function(item) {
 				var option = document.createElement("option");
 				option.value = item;
 				option.textContent = item;
 				input.appendChild(option);
 			});
 		}
-
 		// Append label and input to the div
 		div.appendChild(label);
 		div.appendChild(input);
