@@ -1,5 +1,5 @@
 import { spawnOpenSCAD } from './openscad-runner.js'
-import { buildFeatureCheckboxes } from './features.js';
+//import { buildFeatureCheckboxes } from './features.js';
 
 const renderButton = document.getElementById('render');
 const killButton = document.getElementById('kill');
@@ -684,9 +684,9 @@ try {
 	const initialState = defaultState;
 
 	setState(initialState);
-	await buildFeatureCheckboxes(featuresContainer, featureCheckboxes, () => {
-		onStateChanged({ allowRun: true });
-	});
+//	await buildFeatureCheckboxes(featuresContainer, featureCheckboxes, () => {
+//		onStateChanged({ allowRun: true });
+//	});
 	setState(initialState);
 
 	autorotateCheckbox.onchange = () => {
