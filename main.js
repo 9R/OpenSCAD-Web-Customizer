@@ -350,17 +350,17 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
 		...Object.keys(featureCheckboxes).filter(f => featureCheckboxes[f].checked).map(f => `--enable=${f}`),
 	];
 
-	// add model parameters
+	// add model parameters to openscad arglist according to its type
 	for (var prop in model_params_default) {
-		if (typeof model_params_default[prop] == "string") {
+		let var_type = typeof(model_params_default[prop]);
+		if (var_type == "string") {
 			arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
-		}
-		if ( Array.isArray(model_params_possible[prop]) ) {
-			arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
-		}
-		else {
-			// number and boolean work with ordinary typecasting
+		} else if (["number", "boolean"].includes(var_type)) {
 			arglist.push("-D", prop + "=" + getFormProp(prop));
+		} else if ( Array.isArray(model_params_possible[prop]) ) {
+			arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
+		} else {
+			console.log("Failed to handle property:" + prop);
 		}
 	}
 
